@@ -1,10 +1,15 @@
 # Amazon Dataset Rating Prediction
 > Final Project for Business Intelligence
 ## Dataset
-For more details, refer to https://darel13712.github.io/rs_datasets/
+This dataset consists of reviews from amazon. The data span a period of 18 years, including ~35 million reviews up to March 2013. Reviews include product and user information, ratings, and a plaintext review. Note: this dataset contains potential duplicates, due to products whose reviews Amazon merges. A file has been added below (possible_dupes.txt.gz) to help identify products that are potentially duplicates of each other.
 
+
+For more details, refer to [Amazon Review Dataset (2013)](https://snap.stanford.edu/data/web-Amazon-links.html) 
+
+and [J. McAuley and J. Leskovec. Hidden factors and hidden topics: understanding rating dimensions with review text. RecSys, 2013.](http://i.stanford.edu/~julian/pdfs/recsys13.pdf)
 ## Matrix Factorization
-### FunkSVD
+### Simon's FunkSVD
+[Simon Funk's Blog. Netflix Update: Try This at Home.](https://sifter.org/simon/journal/20061211.html)
 ### BiasSVD
 ### Probabilistic Matrix Factorization (PMF)
 [Mnih, A., & Salakhutdinov, R. (2007). Probabilistic matrix factorization. In Advances in neural information processing systems (pp. 1257-1264).](https://papers.nips.cc/paper_files/paper/2007/file/d7322ed717dedf1eb4e6e52a37ea7bcd-Paper.pdf)
@@ -14,7 +19,7 @@ For more details, refer to https://darel13712.github.io/rs_datasets/
 ## Deep Neural Network
 
 ## Multi-Armed Bandit
-Below are detailed descriptions of each algorithm, indicating whether they are contextual or non-contextual, how they work, and examples demonstrating their usage.
+Below are detailed descriptions of some exsiting MAB algorithm, indicating how they work.
 ### Context-free
 #### Upper Confidence Bound (UCB)
 * **Description**:  The UCB algorithm selects arms based on upper confidence bounds of the estimated rewards, without considering any context. It is suitable when no contextual information is available.
