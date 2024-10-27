@@ -1,22 +1,38 @@
 # Amazon Dataset Rating Prediction
 > Final Project for Business Intelligence
-## Dataset
+## Data
+### Dataset
 This dataset consists of reviews from amazon. The data span a period of 18 years, including ~35 million reviews up to March 2013. Reviews include product and user information, ratings, and a plaintext review. Note: this dataset contains potential duplicates, due to products whose reviews Amazon merges. A file has been added below (possible_dupes.txt.gz) to help identify products that are potentially duplicates of each other.
 
 
 For more details, refer to [Amazon Review Dataset (2013)](https://snap.stanford.edu/data/web-Amazon-links.html) 
 
 and [J. McAuley and J. Leskovec. Hidden factors and hidden topics: understanding rating dimensions with review text. RecSys, 2013.](http://i.stanford.edu/~julian/pdfs/recsys13.pdf)
+
+### Feature Engineering
+
 ## Matrix Factorization
 ### Simon's FunkSVD
 [Simon Funk's Blog. Netflix Update: Try This at Home.](https://sifter.org/simon/journal/20061211.html)
 ### BiasSVD
+BiasSVD is largely based on FunkSVD but introduces some bias terms. 
+
+Thus,the prediction function is:
+
+$\hat{r}_{ui} = \mathbf{p}_u^T \cdot \mathbf{q}_i + b_u + b_i + b$
+
+where $p_u*T$ and $q_i$ denotes the true interaction terms, while $b_u, b_i, b$ denotes the bias terms.
+And the new objective function is:
+
+$\min_{\mathbf{P}, \mathbf{Q}, \mathbf{b}} \sum_{(u,i): r_{ui} \neq ?} (r_{ui} - \hat{r}_{ui})^2 + \lambda \left( \sum_u \|\mathbf{p}_u\|^2 + \sum_i \|\mathbf{q}_i\|^2 + \sum_u b_u^2 + \sum_i b_i^2 \right)$
+
 ### Probabilistic Matrix Factorization (PMF)
 [Mnih, A., & Salakhutdinov, R. (2007). Probabilistic matrix factorization. In Advances in neural information processing systems (pp. 1257-1264).](https://papers.nips.cc/paper_files/paper/2007/file/d7322ed717dedf1eb4e6e52a37ea7bcd-Paper.pdf)
 ### Bayesian Personalized Ranking (BPR)
 [Rendle et. al. (2009). BPR: Bayesian Personalized Ranking from Implicit Feedback. The Conference on Uncertainty in Artificial Intelligence.](https://arxiv.org/pdf/1205.2618)
 
 ## Deep Neural Network
+
 
 ## Multi-Armed Bandit
 Below are detailed descriptions of some exsiting MAB algorithm, indicating how they work.
