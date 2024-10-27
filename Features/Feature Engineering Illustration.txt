@@ -1,0 +1,20 @@
+（任务是已知训练集所有数据和测试集的user_id和product_id，求测试集的score，因此测试集的score、helpfulness和评论(和score同时产生)不能用于特征加工）
+
+字段说明：
+index, time：评论索引，时间戳
+product_id, user_id, cate：label encoding后的物品和用户id、物品所属一级类目（user和product的embedding vocab size可以分别设为165533和37512。同时属于多个一级类目的物品保留第一个类目）
+user_mean_score, user_mean_help：用户的训练集平均score，平均helpfulness。没有出现在训练集的新用户 用其他用户的均值填充
+pro_mean_score, pro_mean_help：物品的训练集平均score，平均helpfulness。没有出现在训练集的新物品 首先用相同一级类目的物品的均值填充，若所属一级类目没有出现过 用其他物品的均值填充
+
+u_vec, p_vec：物品和用户的评论向量，64维，对不同评论的向量做指数平滑(alpha=0.6(因为序列都比较短且不平稳，保证越晚权重越大))，L2 normalization，新用户新物品处理方式与前面相同
+提取方式：在bert后面加768*64和64*1的fc层，用训练集上的评分训练，提取64维的fc层输出。MSELoss从2.21下降至1.08且已平缓）
+u_vec_pca, p_vec_pca：不用评分，直接用bert提取768维的向量后做64维pca（解释方差比例79%），L2 normalization
+dot,dot_pca：两种提取方式下用户和物品向量的内积（前者和score显著正相关，显式地加入user_item二元特征，不确定是否有用）
+score：预测label
+
+测试集划分：
+np.random.seed(42)
+train = df.sample(frac=0.7, random_state=7)
+test = df.drop(train.index.tolist())
+
+(用户平均评分特征可以尝试剔除，因为大部分用户只有一条评论，训练集上这个特征就等于y，会让模型认为它很重要，但测试集如果是新用户没有以前的平均评分信息（物品好一些而且至少有类目信息））
