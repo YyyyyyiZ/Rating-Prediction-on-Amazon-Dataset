@@ -1,5 +1,16 @@
 # Amazon Dataset Rating Prediction
 > Final Project for Business Intelligence
+* User rating prediction based on Amazon Review Dataset.
+* Various model implementations
+  * SVD-Matrix Factorization
+      * FunkSVD
+      * BiasSVD
+      * Probabilistic Matrix Factorization (PMF)
+      * Bayesian Personalized Ranking (BPR)
+  * Deep Neural Networks
+    * Wide & Deep
+    * DeepFM
+  * Multi-Armed Bandit
 ## Data
 ### Dataset
 This dataset consists of reviews from amazon. The data span a period of 18 years, including ~35 million reviews up to March 2013. Reviews include product and user information, ratings, and a plaintext review. Note: this dataset contains potential duplicates, due to products whose reviews Amazon merges. A file has been added below (possible_dupes.txt.gz) to help identify products that are potentially duplicates of each other.
@@ -35,6 +46,8 @@ $\min_{\mathbf{P}, \mathbf{Q}, \mathbf{b}} \sum_{(u,i): r_{ui} \neq ?} (r_{ui} -
 
 
 ## Multi-Armed Bandit
+> MAB algorithm is especially suitable for **cold-start** problems and **online learning**.
+> 
 Below are detailed descriptions of some exsiting MAB algorithm, indicating how they work.
 ### Context-free
 #### Upper Confidence Bound (UCB)
