@@ -1,5 +1,6 @@
 # Amazon Dataset Rating Prediction
 > Final Project for Business Intelligence
+> Supervisor: [Prof. Hongyan Liu](https://www.sem.tsinghua.edu.cn/info/1189/32080.htm).    Teaching Assistant: Shuolong Huangfu
 * User rating prediction based on Amazon Review Dataset.
 * Various model implementations
   * SVD-Matrix Factorization
