@@ -43,6 +43,15 @@ Below are detailed descriptions of some exsiting MAB algorithm, indicating how t
 * **Exploration**: Adds an exploration term based on the uncertainty in the kernel space.
 * **Exploitation**: Predicts the expected reward using kernel regression.
 ### Our Approach
-* Conetext-aware
-* Base on LinUCB but **utilize implicit user/item context** and predict on **explicit feedback**
-* Cluster similar users into groups to handle cold-start
+The algorithm in this study is designed based on the classic LinUCB framework, where user and item features are treated as contextual vectors. It is assumed that the reward for selecting an item at each time step has a functional relationship with these vectors. During each recommendation, the item with the highest upper confidence bound (UCB), calculated based on the estimated expected reward and confidence interval, is selected. Building on this core concept, we introduce the following innovations tailored to our specific research context and dataset:
+#### Implicit Context Vectors
+LinUCB uses explicit user and item features as contextual vectors. However, the dataset used in this study does not include explicit descriptions of user and item features. Therefore, we utilize a large language model to analyze all review information for each user and item, extracting implicit feature vectors to serve as contextual inputs for the model.
+
+#### User Clustering
+The dataset in this study contains a large number of users with only one recorded interaction, making it difficult to update the expected reward distribution for each item based on a user's past behavior. To address this, we cluster users based on their feature vectors and update the expected reward distribution for items by using the behavior records of users within each cluster.
+
+#### Explicit Feedback
+Most contextual bandit-based recommendation algorithms, such as LinUCB, focus primarily on implicit feedback (e.g., click or no-click binary variables). However, our study aims to predict users' explicit feedback (ratings). Therefore, we modify the functional relationship between the reward and the contextual vectors to better fit this explicit feedback setting.
+
+#### Reward Calculation with Partial Feedback
+Traditional MABs calculate rewards by executing actions based on the algorithm’s decision, observing the interaction result with the user, and updating accordingly. However, the dataset in this study is log data, which only includes rewards for actions that were taken in the past and logged. Since these actions often differ from those chosen by the algorithm being evaluated, relying solely on this logged data does not allow for a direct assessment of the algorithm's performance. This issue can be considered a special case of the "off-policy evaluation problem" in reinforcement learning.
