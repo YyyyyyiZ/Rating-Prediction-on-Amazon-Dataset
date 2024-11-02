@@ -1,0 +1,66 @@
+import torch  
+import torch.nn as nn  
+import torch.optim as optim  
+from preprocessing import prep_amazon
+
+torch.manual_seed(42)  
+
+
+class WideDeep1(nn.Module):  
+    def __init__(self, wide_input_dim, deep_input_dim,dropout_rate=0.5):  
+        super(WideDeep1, self).__init__()  
+        self.wide = nn.Linear(wide_input_dim, 1)  
+        self.deep = nn.Sequential(  
+            nn.Linear(deep_input_dim, 256),  
+            nn.BatchNorm1d(256),
+            nn.ReLU(),  
+            nn.Dropout(dropout_rate),
+            nn.Linear(256, 128),  
+            nn.BatchNorm1d(128), 
+            nn.ReLU(),  
+            nn.Dropout(dropout_rate),
+            nn.Linear(128, 64),
+            nn.BatchNorm1d(64), 
+            nn.ReLU(),  
+            nn.Dropout(dropout_rate),
+            nn.Linear(64, 1) 
+        )  
+
+    def forward(self, wide_input, deep_input):  
+        wide_out = self.wide(wide_input)  
+        deep_out = self.deep(deep_input)  
+        return 0.5 * torch.add(wide_out,deep_out)  
+    
+class WideDeep2(nn.Module):  
+    def __init__(self, wide_input_dim, deep_input_dim,dropout_rate=0.5):  
+        super(WideDeep2, self).__init__()  
+        self.wide = nn.Linear(wide_input_dim, 16)  
+        self.deep = nn.Sequential(  
+            nn.Linear(deep_input_dim, 256),  
+            nn.ReLU(),  
+            nn.Dropout(dropout_rate),
+            nn.Linear(256, 128),  
+            nn.ReLU(),  
+            nn.Dropout(dropout_rate),
+            nn.Linear(128, 64),
+            nn.ReLU(),  
+            nn.Dropout(dropout_rate),
+            nn.Linear(64, 16) 
+        )  
+        self.fusion_layer = nn.Linear(32, 1)
+
+    def forward(self, wide_input, deep_input):  
+        wide_out = self.wide(wide_input)  
+        deep_out = self.deep(deep_input)  
+        widedeep_out = self.fusion_layer(torch.cat((wide_out,deep_out),dim=1))
+        return widedeep_out
+
+X_train_deep, X_test_deep, X_train_wide, X_test_wide, y_train, y_test=prep_amazon()
+wide_input_dim = X_train_wide.shape[1]   
+deep_input_dim = X_train_deep.shape[1]  
+
+model1 = WideDeep1(wide_input_dim, deep_input_dim)
+model2 = WideDeep2(wide_input_dim, deep_input_dim)
+
+
+

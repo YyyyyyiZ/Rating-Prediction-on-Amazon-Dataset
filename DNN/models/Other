@@ -1,0 +1,96 @@
+import torch  
+import torch.nn as nn  
+import torch.optim as optim  
+from preprocessing import prep_amazon
+import torch.nn.functional as F
+from models import FactorizationMachine 
+
+torch.manual_seed(42)  
+
+class CrossNetwork(nn.Module):
+    def __init__(self, input_dim, num_layers=3):
+        super(CrossNetwork, self).__init__()
+        self.num_layers = num_layers
+        self.weights = nn.ParameterList([nn.Parameter(torch.randn(input_dim)) for _ in range(num_layers)])
+        self.biases = nn.ParameterList([nn.Parameter(torch.zeros(input_dim)) for _ in range(num_layers)])
+    
+    def forward(self, x):
+        x0 = x
+        for i in range(self.num_layers):
+            xw = torch.sum(x0 * self.weights[i], dim=1, keepdim=True)
+            x = x0 * xw + self.biases[i] + x
+        return x
+
+class DCN(nn.Module):
+    def __init__(self, input_dim):
+        super(DCN, self).__init__()
+        self.cross_network = CrossNetwork(input_dim)
+        self.deep = nn.Sequential(
+            nn.Linear(input_dim, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(256, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(128, 64),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(64, 1)
+        )
+    
+    def forward(self, x):
+        cross_output = self.cross_network(x)
+        deep_output = self.deep(x)
+        output =  0.5 * torch.add(cross_output, deep_output)
+        return output
+    
+
+class CompressedInteractionNetwork(nn.Module):
+    def __init__(self, input_dim, layer_sizes=[128, 128]):
+        super(CompressedInteractionNetwork, self).__init__()
+        self.layer_sizes = layer_sizes
+        self.conv1ds = nn.ModuleList([
+            nn.Conv1d(layer_sizes[i-1] if i > 0 else input_dim, layer_sizes[i], 1)
+            for i in range(len(layer_sizes))
+        ])
+    
+    def forward(self, x):
+        x0 = x
+        xs = [x]
+        for i in range(len(self.layer_sizes)):
+            xi = torch.bmm(xs[-1], x0.transpose(1, 2))
+            xi = self.conv1ds[i](xi)
+            xi = F.relu(xi, inplace=True)
+            xs.append(xi)
+        return torch.cat(xs, dim=1)
+
+class xDeepFM(nn.Module):
+    def __init__(self, input_dim):
+        super(xDeepFM, self).__init__()
+        self.fm = FactorizationMachine(input_dim)
+        self.cin = CompressedInteractionNetwork(input_dim)
+        self.deep = nn.Sequential(
+            nn.Linear(input_dim, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(256, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(128, 64),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(64, 1)
+        )
+    
+    def forward(self, x):
+        fm_output = self.fm(x)
+        cin_output = self.cin(x)
+        deep_output = self.deep(x)
+        output = torch.add(fm_output, cin_output, deep_output)/3
+        return output

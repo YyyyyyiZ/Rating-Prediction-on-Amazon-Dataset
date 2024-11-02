@@ -1,0 +1,44 @@
+import pandas as pd  
+import numpy as np  
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+
+def concate_features(df,features_numerical,features_vector):  
+    concat_vectors = np.concatenate([np.stack(df[v].values) for v in features_vector], axis=1)  
+    X = np.concatenate([df[features_numerical].values, concat_vectors], axis=1)  
+    return X 
+
+def prep_amazon(file_train="models/train_1.pkl",file_test="models/test_1.pkl",
+                feature_onehot=['cate'],
+                #feature_embedding=['product_id', 'user_id'],
+                features_wide_numerical = ['product_id', 'user_id','dot','dot_pca'],
+                features_wide_vector = ['cate'],
+                features_deep_numerical = ['time', 'cate', 'user_mean_help', 'pro_mean_score','pro_mean_help', 'dot', 'dot_pca', 'product_id', 'user_id'],  
+                features_deep_vector = ['u_vec', 'p_vec', 'u_vec_pca', 'p_vec_pca'],
+                label='score' ):
+    
+    train_data = pd.read_pickle(file_train)  
+    test_data = pd.read_pickle(file_test)
+
+    for fea in feature_onehot:
+        train_cate_onehot=pd.get_dummies(train_data[fea], drop_first=True)
+        test_cate_onehot=pd.get_dummies(test_data[fea], drop_first=True)
+        train_data[f'{fea}_onehot'] = train_cate_onehot.apply(lambda row: row.tolist(), axis=1)
+        test_data[f'{fea}_onehot'] = test_cate_onehot.apply(lambda row: row.tolist(), axis=1)
+        features_wide_vector = [f'{fea}_onehot' if x == fea else x for x in features_wide_vector]
+
+    X_train_wide = concate_features(train_data,features_wide_numerical,features_wide_vector)  
+    X_train_deep = concate_features(train_data,features_deep_numerical,features_deep_vector)  
+    y_train = train_data[label].values  
+
+    X_test_deep = concate_features(test_data,features_wide_numerical,features_wide_vector) 
+    X_test_deep = concate_features(test_data,features_deep_numerical,features_deep_vector)  
+    y_test = test_data[label].values  
+
+    scaler = StandardScaler()  
+    X_train_deep = scaler.fit_transform(X_train_deep)  
+    X_test_deep = scaler.transform(X_test_deep) 
+    X_train_wide = scaler.fit_transform(X_train_wide)  
+    X_test_wide = scaler.transform(X_test_wide) 
+
+    return X_train_deep, X_test_deep, X_train_wide, X_test_wide, y_train, y_test
+

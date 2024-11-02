@@ -1,0 +1,46 @@
+import torch  
+import torch.nn as nn  
+import torch.optim as optim  
+from preprocessing import prep_amazon
+
+torch.manual_seed(42)  
+
+class FactorizationMachine(nn.Module):
+    def __init__(self, input_dim, latent_dim=10):
+        super(FactorizationMachine, self).__init__()
+        self.linear = nn.Linear(input_dim, 1)
+        self.v = nn.Parameter(torch.randn((input_dim, latent_dim), requires_grad=True))
+    
+    def forward(self, x):
+        linear_part = self.linear(x)
+        interaction_part = 0.5 * torch.sum(
+            torch.pow(torch.matmul(x, self.v), 2) - torch.matmul(torch.pow(x, 2), torch.pow(self.v, 2)),
+            dim=1, keepdim=True
+        )
+        return linear_part + interaction_part
+
+class DeepFM(nn.Module):
+    def __init__(self, input_dim):
+        super(DeepFM, self).__init__()
+        self.fm = FactorizationMachine(input_dim)
+        self.deep = nn.Sequential(
+            nn.Linear(input_dim, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(256, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(128, 64),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(64, 1)
+        )
+    
+    def forward(self, x):
+        fm_output = self.fm(x)
+        deep_output = self.deep(x)
+        output = 0.5 * torch.add(fm_output, deep_output)
+        return output
